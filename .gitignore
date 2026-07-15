@@ -1,0 +1,14 @@
+*.elf
+*.bin
+*.bin.bkup
+*.o
+*.d
+*.a
+*.bit
+*.clangd
+vitis_journal.py
+logs/
+test_workspace/
+build/
+bsp/reference/
+bsp/libsrc-cursed

@@ -1,0 +1,18 @@
+https://docs.amd.com/r/en-US/ug1283-bootgen-user-guide/Introduction
+
+Komenda do generacji boot.bin
+bootgen -arch zynq -image zturn.bif -w on -o boot.bin
+
+UWAGA!
+Plik musi koniecznie nazywać się boot.bin.
+Inaczej FSBL go nie znajdzie.
+
+Pliki do bootowania koniecznie na pierwszej partycji.
+Tylko ona jest przeszukiwana przez bootloadery.
+
+source /tools/Xilinx/2025.2/Vivado/settings64.sh
+Dopiero po sourcowaniu dostępny jest bootgen.
+
+Pliki fsbl.elf i fsbl-gpio.elf różnią się tym, że w drugim przypadku
+inicjalizowany jest blok GPIO, dzięki czemu możliwe jest sterowanie diodami
+w bootloaderze lub systemie operacyjnym.

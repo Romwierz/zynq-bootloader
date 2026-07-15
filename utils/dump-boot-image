@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+
+output_file="resources/$1"
+
+# todo:
+# - check if BIF is newer than boot.bin
+
+echo 'BIF file:' > "$output_file"
+cat zturn.bif >> "$output_file"
+bootgen -arch zynq -read boot.bin >> "$output_file"

@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+device=$1
+mount "$device" /mnt && cp -v boot.bin /mnt && umount /mnt
