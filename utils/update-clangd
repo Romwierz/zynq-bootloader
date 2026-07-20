@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+
+echo "CompileFlags:
+  Add:
+    - -I${XILINX_VITIS}/gnu/aarch32/lin/gcc-arm-none-eabi/aarch32-xilinx-eabi/usr/include/
+  Remove: [-fno-tree-loop-distribute-patterns]
+" > .clangd
+
+echo "clangd configuration written to .clangd!"

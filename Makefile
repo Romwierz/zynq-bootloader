@@ -163,3 +163,6 @@ bsp-clean-objects: bsp-drivers-clean bsp-standalone-clean ## Remove BSP objects
 
 bsp-clean: bsp-clean-objects ## Remove BSP objects and libs
 	rm -f $(BSP_LIBXIL) $(BSP_LIBXIL_STANDALONE)
+
+update-clangd: ## Update project-level .clangd
+	@$(ROOTDIR)/utils/update-clangd
