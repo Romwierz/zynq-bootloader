@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+#
+# Remove unused header files from bsp/include by checking dependency files
+# generated be the compiler.
+# Pass headers to check as input arguments.
+# Headers are not completely removed, so if compilation breaks, restore headers from bsp/.trash.
+# 
+# todo:
+# - check if rg is available, use grep otherwise
+
+headers=( "$@" )
+header_path=bsp/include
+delete_dir=bsp/.trash
+
+mkdir -p "$delete_dir"
+
+check_headers() {
+    local rerun=0
+    for h in "${headers[@]}"; do
+        [[ ! -f "$h" ]] && continue
+
+        echo -n "${h#"$header_path/"}: "
+
+        rg -u "$h" -g 'src/*.d' -g 'bsp/lib/**/*.d' -g 'bsp/build/**/*.d' 2>&1 >/dev/null
+        if [[ $? == 0 ]]; then
+            echo 'Keeping'
+        else
+            echo 'Removing'
+            mv "$h" "$delete_dir"
+            rerun=1
+        fi
+    done
+    return $rerun
+}
+
+# Rerun the loop until it returns 0
+until check_headers; do
+    :
+done

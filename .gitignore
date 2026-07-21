@@ -12,3 +12,4 @@ test_workspace/
 build/
 bsp/reference/
 bsp/libsrc-cursed
+.trash/
