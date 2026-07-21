@@ -15,7 +15,7 @@ BSP_LIBS_PATH 	:= $(ROOTDIR)/bsp/lib
 comma:= ,
 empty:=
 space:= $(empty) $(empty)
-LIBS := xilstandalone gcc c
+LIBS := xil xilstandalone gcc c
 LIBS := $(addprefix -l,$(LIBS))
 LIBS := $(subst $(space),$(comma),$(LIBS))
 
@@ -89,8 +89,7 @@ define FOREACH
 endef
 
 BSP_BUILD			  := $(ROOTDIR)/bsp/build
-BSP_DRIVERS_MAKEFILES := $(wildcard $(BSP_SRC)/uartps/src/Makefile)
-# BSP_DRIVERS_MAKEFILES := $(wildcard $(BSP_SRC)/*/src/Makefile)
+BSP_DRIVERS_MAKEFILES := $(wildcard $(BSP_SRC)/*/src/Makefile)
 BSP_DRIVERS   		  := $(patsubst $(BSP_SRC)/%/src/Makefile,%,$(BSP_DRIVERS_MAKEFILES))
 # Don't include standalone and xiltimer
 BSP_DRIVERS_SRCS 	  := $(patsubst %/Makefile,%,$(BSP_DRIVERS_MAKEFILES))

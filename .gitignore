@@ -12,4 +12,7 @@ test_workspace/
 build/
 bsp/reference/
 bsp/libsrc-cursed
+bsp/libsrc/*/data
+bsp/libsrc/*/doc
+bsp/libsrc/*/example
 .trash/
