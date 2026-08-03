@@ -6,6 +6,8 @@
 *.a
 *.bit
 *.clangd
+*.map
+*.tar.xz
 vitis_journal.py
 logs/
 test_workspace/
