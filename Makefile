@@ -15,13 +15,6 @@ BSP_SRC 		:= $(ROOTDIR)/bsp/libsrc
 BSP_HEADERS 	:= $(ROOTDIR)/bsp/include
 BSP_LIBS_PATH 	:= $(ROOTDIR)/bsp/lib
 
-comma:= ,
-empty:=
-space:= $(empty) $(empty)
-LIBS := xilstandalone gcc c
-LIBS := $(addprefix -l,$(LIBS))
-LIBS := $(subst $(space),$(comma),$(LIBS))
-
 relpath = $(patsubst $(ROOTDIR)/%,%,$(1))
 
 INC += -I.
@@ -35,9 +28,6 @@ CFLAGS_EXTRA := -O2 -g -Wall -Wextra -fno-tree-loop-distribute-patterns -DNDEBUG
 ALL_CFLAGS 	 := $(INC) $(CFLAGS) $(CFLAGS_EXTRA)
 ALL_LDFLAGS  := $(CFLAGS) $(LDFLAGS) \
 				-T"$(LINKER_SCRIPT)" \
-				-L"$(BSP_LIBS_PATH)" -L"/" \
-				-Wl,--start-group,$(LIBS) -Wl,--end-group
-				# -Wl,--start-group,-lxiltimer,-lxilffs,-lxilrsa,-lxil,-lxilstandalone,-lxiltimer,-lxilffs,-lxilrsa,-lgcc,-lc -Wl,--end-group
 
 SRC_C += $(addprefix src/,\
 	main.c \
