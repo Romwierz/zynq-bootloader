@@ -48,14 +48,7 @@ extern "C" {
 /***************************** Include Files *********************************/
 
 #include "xil_types.h"
-#include "xil_printf.h"
 #include "xstatus.h"
-
-#if defined (__MICROBLAZE__)
-#include "mb_interface.h"
-#else
-#include "xpseudo_asm.h"
-#endif
 
 #if defined (__riscv)
 #include "riscv_interface.h"

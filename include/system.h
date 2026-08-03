@@ -31,3 +31,7 @@
 #define MIO_PIN_IO_Type_LVCMOS18 1U << 11
 
 #define	XUARTPS_BASEADDRESS	XPAR_XUARTPS_1_BASEADDR
+
+/* xil_printf.h */
+extern void outbyte (char c); /**< To send byte */
+extern char inbyte(void); /**< To receive byte */
