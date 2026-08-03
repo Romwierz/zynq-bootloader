@@ -35,7 +35,6 @@
 
 #include "xstatus.h"
 #include "xuartps.h"
-#include "xil_io.h"
 
 /************************** Constant Definitions ****************************/
 
@@ -139,9 +138,6 @@ s32 XUartPs_CfgInitialize(XUartPs *InstancePtr,
 	InstancePtr->ReceiveBuffer.NextBytePtr = NULL;
 	InstancePtr->ReceiveBuffer.RemainingBytes = 0U;
 	InstancePtr->ReceiveBuffer.RequestedBytes = 0U;
-
-	/* Initialize the platform data */
-	InstancePtr->Platform = XGetPlatform_Info();
 
 	InstancePtr->is_rxbs_error = 0U;
 

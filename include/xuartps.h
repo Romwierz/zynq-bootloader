@@ -165,14 +165,7 @@ extern "C" {
 /***************************** Include Files ********************************/
 
 #include "xil_types.h"
-#include "xil_assert.h"
-#include "xstatus.h"
 #include "xuartps_hw.h"
-#include "xplatform_info.h"
-#if defined  (XCLOCKING)
-#include "xil_clocking.h"
-#endif
-#include "xil_util.h"
 
 /************************** Constant Definitions ****************************/
 
