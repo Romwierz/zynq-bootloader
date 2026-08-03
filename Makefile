@@ -1,4 +1,7 @@
+include verbose.mk
+
 CC := $${XILINX_VITIS}/gnu/aarch32/lin/gcc-arm-none-eabi/bin/arm-none-eabi-gcc
+LD := $(CC)
 AR := $${XILINX_VITIS}/gnu/aarch32/lin/gcc-arm-none-eabi/bin/arm-none-eabi-ar
 SZ := $${XILINX_VITIS}/gnu/aarch32/lin/gcc-arm-none-eabi/bin/arm-none-eabi-size
 
@@ -15,30 +18,43 @@ BSP_LIBS_PATH 	:= $(ROOTDIR)/bsp/lib
 comma:= ,
 empty:=
 space:= $(empty) $(empty)
-LIBS := xil xilstandalone gcc c
+LIBS := xilstandalone gcc c
 LIBS := $(addprefix -l,$(LIBS))
 LIBS := $(subst $(space),$(comma),$(LIBS))
 
 relpath = $(patsubst $(ROOTDIR)/%,%,$(1))
 
+INC += -I.
+INC += -I./include
+
 # From Vitis IDE (Platform build):
-CFLAGS		 := -DSDT -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -MMD -MP \
-				-specs=$(SPECS_FILE) -I$(BSP_HEADERS)
+CFLAGS		 := -DSDT -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=softfp -MMD -MP \
+				-specs=$(SPECS_FILE)
 CFLAGS_EXTRA := -O2 -g -Wall -Wextra -fno-tree-loop-distribute-patterns -DNDEBUG
 
-ALL_CFLAGS 	 := $(CFLAGS) $(CFLAGS_EXTRA)
+ALL_CFLAGS 	 := $(INC) $(CFLAGS) $(CFLAGS_EXTRA)
 ALL_LDFLAGS  := $(CFLAGS) $(LDFLAGS) \
 				-T"$(LINKER_SCRIPT)" \
 				-L"$(BSP_LIBS_PATH)" -L"/" \
 				-Wl,--start-group,$(LIBS) -Wl,--end-group
 				# -Wl,--start-group,-lxiltimer,-lxilffs,-lxilrsa,-lxil,-lxilstandalone,-lxiltimer,-lxilffs,-lxilrsa,-lgcc,-lc -Wl,--end-group
 
-SRC := $(wildcard src/*.c)
-OBJ := $(SRC:.c=.o)
+SRC_C += $(addprefix src/,\
+	main.c \
+	xuartps.c \
+	xuartps_hw.c \
+	)
+
+OBJ := $(SRC_C:.c=.o)
 
 .PHONY: all clean bsp build-bsp-libxil-objects help
 
 all: out.elf
+
+deploy: out.elf ## Build and deploy
+	@bootgen -arch zynq -image zturn.bif -w on -o boot.bin
+	# @read '?Press Enter to continue...'
+	# @sudo ./utils/copy-boot-image /dev/sde1
 
 help: ## Show this help message
 	@grep --no-filename -E '^[a-zA-Z_-]+:.*?##.*$$' $(MAKEFILE_LIST) | awk 'BEGIN { \
@@ -63,11 +79,13 @@ printvars: ## Print internal variables
 	@echo "BSP_STANDALONE_OBJ = $(BSP_STANDALONE_OBJ)"
 
 out.elf: $(OBJ)
-	$(CC) $^ -o $@ $(ALL_LDFLAGS)
-	$(SZ) $@
+	@echo "LINK $@"
+	$(Q)$(LD) $^ -o $@ $(ALL_LDFLAGS)
+	$(Q)$(SZ) $@
 
 %.o: %.c
-	$(CC) -c -o $@ $(ALL_CFLAGS) $<
+	@echo "CC $<"
+	$(Q)$(CC) -c -o $@ $(ALL_CFLAGS) $<
 
 # BSP madness
 define build_drv
