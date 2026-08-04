@@ -21,8 +21,12 @@ CFLAGS		 := -DSDT -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=softfp -MMD -MP \
 CFLAGS_EXTRA := -O2 -g -Wall -Wextra -fno-tree-loop-distribute-patterns -DNDEBUG
 
 ALL_CFLAGS 	 := $(INC) $(CFLAGS) $(CFLAGS_EXTRA)
-ALL_LDFLAGS  := $(CFLAGS) $(LDFLAGS) \
+ALL_LDFLAGS  = $(CFLAGS) $(LDFLAGS) \
 				-T"$(LINKER_SCRIPT)" \
+				-Wl,-Map=$@.map,--cref
+ifeq ($(BUILD_VERBOSE),1)
+ALL_LDFLAGS += -Wl,--trace
+endif
 
 SRC_C += $(addprefix src/,\
 	main.c \
