@@ -18,3 +18,4 @@ bsp/libsrc/*/data
 bsp/libsrc/*/doc
 bsp/libsrc/*/example
 .trash/
+zturn-linux/

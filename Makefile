@@ -1,42 +1,51 @@
-include verbose.mk
+# Configure environment (can be put into file called e.g. mkenv.mk)
+TOP = $(realpath .)
+BUILD ?= build
 
-CC := $${XILINX_VITIS}/gnu/aarch32/lin/gcc-arm-none-eabi/bin/arm-none-eabi-gcc
-LD := $(CC)
-AR := $${XILINX_VITIS}/gnu/aarch32/lin/gcc-arm-none-eabi/bin/arm-none-eabi-ar
-SZ := $${XILINX_VITIS}/gnu/aarch32/lin/gcc-arm-none-eabi/bin/arm-none-eabi-size
+include $(TOP)/verbose.mk
 
-ROOTDIR = $(realpath .)
+CROSS_COMPILE = $${XILINX_VITIS}/gnu/aarch32/lin/gcc-arm-none-eabi/bin/arm-none-eabi-
+CC            = $(CROSS_COMPILE)gcc
+CPP           = $(CC) -E
+LD            = $(CC) # Use linker throug $CC, because direct usage may cause weird issues
+OBJCOPY       = $(CROSS_COMPILE)objcopy
+AR            = $(CROSS_COMPILE)ar
+SZ            = $(CROSS_COMPILE)size
 
-LINKER_SCRIPT := $(ROOTDIR)/src/lscript.ld
-SPECS_FILE := $(ROOTDIR)/src/Xilinx.spec
+RM    = rm
+ECHO  = @echo
+CP    = cp
+MKDIR = mkdir
+SED   = sed
+CAT   = cat
 
-relpath = $(patsubst $(ROOTDIR)/%,%,$(1))
+LINKER_SCRIPT := src/lscript.ld
+SPECS_FILE := src/Xilinx.spec
 
+# Utilities functions (can be put into file called e.g. mkutil.mk)
+relpath = $(patsubst $(TOP)/%,%,$(1))
+
+# Define all compilation/linking flags and options
 INC += -I.
 INC += -I./include
 
-# From Vitis IDE (Platform build):
-CFLAGS		 := -DSDT -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=softfp -MMD -MP \
-				-specs=$(SPECS_FILE)
-CFLAGS_EXTRA := -O2 -g -Wall -Wextra -fno-tree-loop-distribute-patterns -DNDEBUG
-
-ALL_CFLAGS 	 := $(INC) $(CFLAGS) $(CFLAGS_EXTRA)
-ALL_LDFLAGS  = $(CFLAGS) $(LDFLAGS) \
-				-T"$(LINKER_SCRIPT)" \
-				-Wl,-Map=$@.map,--cref
+CFLAGS += $(INC) -DSDT -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=softfp -MMD -MP -specs=$(SPECS_FILE)
+CFLAGS += -O2 -g -Wall -Wextra -fno-tree-loop-distribute-patterns -DNDEBUG
+LDFLAGS = $(CFLAGS) -T"$(LINKER_SCRIPT)" -Wl,-Map=$@.map,--cref
 ifeq ($(BUILD_VERBOSE),1)
-ALL_LDFLAGS += -Wl,--trace
+LDFLAGS += -Wl,--trace
 endif
 
+# Define required source and object files
 SRC_C += $(addprefix src/,\
 	main.c \
 	xuartps.c \
 	xuartps_hw.c \
 	)
 
-OBJ := $(SRC_C:.c=.o)
+OBJ := $(patsubst src/%.c,$(BUILD)/%.o,$(SRC_C))
 
-.PHONY: all clean bsp build-bsp-libxil-objects help
+.PHONY: all clean help
 
 all: out.elf
 
@@ -53,28 +62,24 @@ help: ## Show this help message
 	{ printf "\033[32m%-30s\033[0m %s\n", $$1, $$2 }'
 
 clean:
+	@echo $(OBJ)
 	@rm -f out.elf $(OBJ)
 
 printvars: ## Print internal variables
 	@echo "CC      = $(CC)"
-	@echo "CFLAGS  = $(ALL_CFLAGS)"
-	@echo "LDFLAGS = $(ALL_LDFLAGS)"
+	@echo "CFLAGS  = $(CFLAGS)"
+	@echo "LDFLAGS = $(LDFLAGS)"
 	@echo "OBJ     = $(OBJ)"
-	@echo "LIBS    = $(LIBS)"
-	@echo "BSP_DRV = $(BSP_DRIVERS)"
-	@echo "BSP_DRV_OBJ = $(BSP_DRIVERS_OBJ)"
-	@echo "BSP_BUILD   = $(BSP_BUILD)"
-	@echo "BSP_STANDALONE_C   = $(BSP_STANDALONE_C)"
-	@echo "BSP_STANDALONE_OBJ = $(BSP_STANDALONE_OBJ)"
 
 out.elf: $(OBJ)
 	@echo "LINK $@"
-	$(Q)$(LD) $^ -o $@ $(ALL_LDFLAGS)
+	$(Q)$(LD) $^ -o $@ $(LDFLAGS)
 	$(Q)$(SZ) $@
 
-%.o: %.c
+$(BUILD)/%.o: src/%.c
+	@mkdir -p $(BUILD)
 	@echo "CC $<"
-	$(Q)$(CC) -c -o $@ $(ALL_CFLAGS) $<
+	$(Q)$(CC) -c -o $@ $(CFLAGS) $<
 
 update-clangd: ## Update project-level .clangd
-	@$(ROOTDIR)/utils/update-clangd
+	@$(TOP)/utils/update-clangd
