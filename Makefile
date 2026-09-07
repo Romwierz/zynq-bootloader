@@ -21,6 +21,7 @@ CAT   = cat
 
 LINKER_SCRIPT := src/lscript.ld
 SPECS_FILE := src/Xilinx.spec
+BOOT_IMG = boot.bin
 
 # Utilities functions (can be put into file called e.g. mkutil.mk)
 relpath = $(patsubst $(TOP)/%,%,$(1))
@@ -28,6 +29,7 @@ relpath = $(patsubst $(TOP)/%,%,$(1))
 # Define all compilation/linking flags and options
 INC += -I.
 INC += -I./include
+INC += -I$(BUILD)
 
 CFLAGS += $(INC) -DSDT -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=softfp -MMD -MP -specs=$(SPECS_FILE)
 CFLAGS += -O2 -g -Wall -Wextra -fno-tree-loop-distribute-patterns -DNDEBUG
@@ -45,14 +47,19 @@ SRC_C += $(addprefix src/,\
 
 OBJ := $(patsubst src/%.c,$(BUILD)/%.o,$(SRC_C))
 
+# Custom functions
+define WRITE_BOOT_DEV
+	@sh -c '{ [ -n "$(DEV)" ] && [ -n "$(MNT_POINT)" ]; } || \
+		{ echo "Cannot write to SD card: DEV or MNT_POINT not specified"; exit 1; }'
+	@sh -c '[ -b $(DEV) ] || { echo "Cannot write to SD card: $(DEV) does not exist"; exit 1; }'
+	$(ECHO) "Writing $< to SD card..."
+	@sudo sh -c "mount $(DEV) $(MNT_POINT) && $(CP) -v $< $(MNT_POINT) && umount $(MNT_POINT)"
+endef
+
+# Targets
 .PHONY: all clean help
 
-all: out.elf
-
-deploy: out.elf ## Build and deploy
-	@bootgen -arch zynq -image zturn.bif -w on -o boot.bin
-	# @read '?Press Enter to continue...'
-	# @sudo ./utils/copy-boot-image /dev/sde1
+all: $(BUILD)/out.elf
 
 help: ## Show this help message
 	@grep --no-filename -E '^[a-zA-Z_-]+:.*?##.*$$' $(MAKEFILE_LIST) | awk 'BEGIN { \
@@ -62,8 +69,7 @@ help: ## Show this help message
 	{ printf "\033[32m%-30s\033[0m %s\n", $$1, $$2 }'
 
 clean:
-	@echo $(OBJ)
-	@rm -f out.elf $(OBJ)
+	$(RM) -rf $(BUILD)
 
 printvars: ## Print internal variables
 	@echo "CC      = $(CC)"
@@ -71,7 +77,7 @@ printvars: ## Print internal variables
 	@echo "LDFLAGS = $(LDFLAGS)"
 	@echo "OBJ     = $(OBJ)"
 
-out.elf: $(OBJ)
+$(BUILD)/out.elf: $(OBJ)
 	@echo "LINK $@"
 	$(Q)$(LD) $^ -o $@ $(LDFLAGS)
 	$(Q)$(SZ) $@
@@ -80,6 +86,12 @@ $(BUILD)/%.o: src/%.c
 	@mkdir -p $(BUILD)
 	@echo "CC $<"
 	$(Q)$(CC) -c -o $@ $(CFLAGS) $<
+
+$(BOOT_IMG): $(BUILD)/out.elf
+	bootgen -arch zynq -image zturn.bif -w on -o $@
+
+deploy: $(BOOT_IMG) ## Build and deploy
+	$(call WRITE_BOOT_DEV)
 
 update-clangd: ## Update project-level .clangd
 	@$(TOP)/utils/update-clangd
