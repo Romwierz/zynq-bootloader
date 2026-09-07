@@ -20,3 +20,5 @@ bsp/libsrc/*/example
 .trash/
 zturn-linux/
 backup/
+.gdb_history
+.python-version
