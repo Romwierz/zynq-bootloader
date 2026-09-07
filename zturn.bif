@@ -2,5 +2,5 @@ zturn:
 {
 	[bootloader] fsbl.elf
 	Top.bit
-	out.elf
+	build/out.elf
 }

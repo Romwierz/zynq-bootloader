@@ -19,3 +19,4 @@ bsp/libsrc/*/doc
 bsp/libsrc/*/example
 .trash/
 zturn-linux/
+backup/
