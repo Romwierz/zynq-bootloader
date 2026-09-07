@@ -1,0 +1,34 @@
+#!/usr/bin/env sh
+#
+# Run gdb using gdb-dashboard views and organize them using tmux panes.
+#
+# Usage: run-gdb --serial /dev/tty* <executable> [gdb-args...]
+#
+# Make sure that the gdb-server is running:
+#   openocd -f interface/ftdi/digilent_jtag_smt2_nc.cfg -f target/zynq_7000.cfg
+#
+# Also, keep in mind that gdb-dashboard requires gdb to have Python support.
+# Additionally, this kind of gdb build requires access to specific version
+# of Python shared library.
+
+# Register main pane and create additional ones
+main_pane="$(tmux display-message -p '#D')"
+gdb_additional_pane="$(tmux split-pane -hPF "#D" "tail -f /dev/null")"
+if [ "$1" = --serial ]; then
+    shift
+    serial_pane="$(tmux split-pane -vPF "#D" "tio $1")"
+    shift
+fi
+
+tmux select-pane -t "$main_pane"
+tty="$(tmux display-message -p -t "$gdb_additional_pane" '#{pane_tty}')"
+
+# Do nothing on receiveing the SIGINT instead of terminating this script
+# It's necessary because it seems that gdb process passes this signal back to the parent process (this script)
+trap '' INT
+arm-none-eabi-gdb-py -ex "dashboard source -output $tty" -ex "dashboard assembly -output $tty" "$@"
+trap - INT
+
+# Delete additional panes
+tmux kill-pane -t "$gdb_additional_pane"
+[ -n "$serial_pane" ] && tmux kill-pane -t "$serial_pane"
